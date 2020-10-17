@@ -4,12 +4,16 @@
 
 class GBNRdtReceiver : public RdtReceiver {
    private:
+    enum {
+        GBN_N = 8,
+    };
+
     int expectSeqNumRecv;
     Packet lastAckPkt;
 
    public:
     GBNRdtReceiver();
-    virtual ~GBNRdtReceiver();
+    ~GBNRdtReceiver();
 
    public:
     void receive(const Packet& packet);

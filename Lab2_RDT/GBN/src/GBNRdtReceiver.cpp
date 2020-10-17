@@ -2,8 +2,6 @@
 
 #include "Global.h"
 
-const int GBN_N = 8;
-
 GBNRdtReceiver::GBNRdtReceiver() : expectSeqNumRecv(0) {
     lastAckPkt.acknum = -1;
     lastAckPkt.seqnum = -1;  // 忽略序号字段

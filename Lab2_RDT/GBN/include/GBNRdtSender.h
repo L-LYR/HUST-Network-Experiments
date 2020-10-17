@@ -3,11 +3,14 @@
 #include <list>
 
 #include "RdtSender.h"
-const int GBN_N = 8;        // 序号空间大小
-const int WINDOW_SIZE_MAX = 7;  // 窗口大小
 
 class GBNRdtSender : public RdtSender {
    private:
+    enum {
+        GBN_N = 8,           // 序号空间大小
+        WINDOW_SIZE_MAX = 7  // 窗口长度最大值
+    };
+
     int base;                  // 基序号
     int nextSeqNum;            // 下一个发送的包序号
     std::list<Packet> window;  // 滑动窗口
@@ -16,7 +19,7 @@ class GBNRdtSender : public RdtSender {
 
    public:
     GBNRdtSender();
-    virtual ~GBNRdtSender();
+    ~GBNRdtSender();
 
    public:
     bool getWaitingState();

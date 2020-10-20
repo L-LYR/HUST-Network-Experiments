@@ -2,8 +2,7 @@
 
 #include "Global.h"
 
-SRRdtReceiver::SRRdtReceiver() : rcvWindow(SR_N) {
-    base = 0;
+SRRdtReceiver::SRRdtReceiver() : base(0), rcvWindow(SR_N) {
     updateWindowBound();
     memset(isCached, false, sizeof(isCached));
 }
@@ -12,6 +11,36 @@ SRRdtReceiver::~SRRdtReceiver() {}
 
 void SRRdtReceiver::updateWindowBound() {
     upperBound = (base + WINDOW_SIZE_MAX - 1) % SR_N;
+}
+
+void SRRdtReceiver::printWindow() {
+    std::cout << std::endl
+              << "接收方：" << std::endl
+              << "base = " << base << std::endl
+              << "upperBound = " << upperBound << std::endl
+              << "接收窗口内容：" << std::endl;
+    if (base <= upperBound) {
+        for (int i = base; i <= upperBound; ++i) {
+            if (isCached[i])
+                pUtils->printPacket("报文内容", rcvWindow[i]);
+            else
+                std::cout << "未收到该报文" << std::endl;
+        }
+    } else {
+        for (int i = base; i < SR_N; ++i) {
+            if (isCached[i])
+                pUtils->printPacket("报文内容", rcvWindow[i]);
+            else
+                std::cout << "未收到该报文" << std::endl;
+        }
+        for (int i = 0; i <= upperBound; ++i) {
+            if (isCached[i])
+                pUtils->printPacket("报文内容", rcvWindow[i]);
+            else
+                std::cout << "未收到该报文" << std::endl;
+        }
+    }
+    std::cout << std::endl;
 }
 
 bool SRRdtReceiver::inCurWindow(int seqNum) {
@@ -27,11 +56,6 @@ void SRRdtReceiver::deliver() {
         // base不断向upperBound靠近，同时向上交付数据
         Message msg;
         memcpy(msg.data, rcvWindow[base].payload, sizeof(rcvWindow[base].payload));
-        
-        // std::cout << std::endl
-        //           << "Deliver: " << msg.data << std::endl
-        //           << std::endl;
-
         pns->delivertoAppLayer(RECEIVER, msg);
         isCached[base] = false;  // 交付后，位置空出
 
@@ -58,14 +82,11 @@ void SRRdtReceiver::receive(const Packet& pkt) {
             if (isCached[pkt.seqnum] == false) {  // 之前没收到，缓存
                 rcvWindow[pkt.seqnum] = pkt;
                 isCached[pkt.seqnum] = true;
+                printWindow();
             }
-
-            // std::cout << std::endl
-            //           << "Receive: " << pkt.payload << std::endl
-            //           << std::endl;
-
             if (pkt.seqnum == base) {  // 是基序号对应的包，连续向上交付
                 deliver();
+                printWindow();
             }
         }     // 在上一窗口
     } else {  // 其余情况报告但不处理

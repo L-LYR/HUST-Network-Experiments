@@ -16,6 +16,7 @@ class GBNRdtSender : public RdtSender {
     std::list<Packet> window;  // 滑动窗口
 
     bool inWindow(int seqNum);  // 用来判断seqNum是否在当前窗口内
+    void printWindow();
 
    public:
     GBNRdtSender();

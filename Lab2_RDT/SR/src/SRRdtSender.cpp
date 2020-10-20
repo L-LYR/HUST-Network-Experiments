@@ -14,22 +14,49 @@ bool SRRdtSender::getWaitingState() {
     return cnt == WINDOW_SIZE_MAX;
 }
 
+void SRRdtSender::printWindow() {
+    std::cout << std::endl
+              << "发送方：" << std::endl
+              << "base = " << base << std::endl
+              << "nextSeqNum = " << nextSeqNum << std::endl
+              << "发送窗口内容：" << std::endl;
+    if (cnt > 0) {
+        if (base < nextSeqNum) {
+            for (int i = base; i < nextSeqNum; ++i) {
+                if (hasAck[i])
+                    std::cout << "已收到确认，";
+                else
+                    std::cout << "未收到确认，";
+                pUtils->printPacket("报文内容", sendWindow[i]);
+            }
+        } else {
+            for (int i = base; i < SR_N; ++i) {
+                if (hasAck[i])
+                    std::cout << "已收到确认，";
+                else
+                    std::cout << "未收到确认，";
+                pUtils->printPacket("报文内容", sendWindow[i]);
+            }
+            for (int i = 0; i < nextSeqNum; ++i) {
+                if (hasAck[i])
+                    std::cout << "已收到确认，";
+                else
+                    std::cout << "未收到确认，";
+                pUtils->printPacket("报文内容", sendWindow[i]);
+            }
+        }
+    }
+    std::cout << std::endl;
+}
+
 bool SRRdtSender::send(const Message& msg) {
     if (getWaitingState()) return false;
-
-    // std::cout << std::endl
-    //           << "Message: " << msg.data << std::endl
-    //           << std::endl;
 
     Packet pkt;
     pkt.acknum = -1;
     pkt.seqnum = nextSeqNum;
     memcpy(pkt.payload, msg.data, sizeof(msg.data));
     pkt.checksum = pUtils->calculateCheckSum(pkt);
-
-    // std::cout << std::endl
-    //           << "Send: " << pkt.payload << std::endl
-    //           << std::endl;
 
     pUtils->printPacket("发送方发送报文", pkt);
 
@@ -40,6 +67,8 @@ bool SRRdtSender::send(const Message& msg) {
     hasAck[nextSeqNum] = false;
     nextSeqNum = (nextSeqNum + 1) % SR_N;
     cnt++;
+
+    printWindow();
 
     return true;
 }
@@ -65,6 +94,7 @@ void SRRdtSender::receive(const Packet& ackPkt) {
                 cnt--;
             }
         }
+        printWindow();
     }
 }
 

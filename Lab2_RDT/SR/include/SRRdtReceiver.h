@@ -19,6 +19,7 @@ class SRRdtReceiver : public RdtReceiver {
 
     void updateWindowBound();
     bool inCurWindow(int seqNum);
+    void printWindow();
     void deliver();
 
    public:

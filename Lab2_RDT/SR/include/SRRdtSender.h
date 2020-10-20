@@ -19,6 +19,7 @@ class SRRdtSender : public RdtSender {
     int cnt;
 
     bool inCurWindow(int seqNum);
+    void printWindow();
 
    public:
     SRRdtSender();

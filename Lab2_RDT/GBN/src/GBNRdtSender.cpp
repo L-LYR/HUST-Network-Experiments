@@ -11,6 +11,18 @@ bool GBNRdtSender::getWaitingState() {
     return (window.size() == WINDOW_SIZE_MAX);
 }
 
+void GBNRdtSender::printWindow() {
+    std::cout << std::endl
+              << "窗口大小：" << window.size() << std::endl
+              << "base = " << base << std::endl
+              << "nextSeqNum = " << nextSeqNum << std::endl
+              << "窗口内容：" << std::endl;
+    for (auto& i : window) {
+        pUtils->printPacket("报文内容", i);
+    }
+    std::cout << std::endl;
+}
+
 bool GBNRdtSender::send(const Message& msg) {
     if (getWaitingState()) return false;
 
@@ -28,6 +40,8 @@ bool GBNRdtSender::send(const Message& msg) {
 
     window.push_back(pkt);                  // 加入窗口缓冲区
     nextSeqNum = (nextSeqNum + 1) % GBN_N;  // 取模
+
+    printWindow();
 
     return true;
 }
@@ -52,12 +66,19 @@ void GBNRdtSender::receive(const Packet& ackPkt) {
             while (!window.empty() && window.front().seqnum != ackPkt.acknum) {
                 window.pop_front();
             }
+            if (window.front().seqnum == ackPkt.acknum)
+                window.pop_front();
+        } else {
+            pUtils->printPacket("发送方收到确认，但不是发送方期待的确认", ackPkt);
         }
 
         if (base != nextSeqNum) {  // 窗口中的ack没有收全，因此重新设置计时器
             pns->startTimer(SENDER, Configuration::TIME_OUT, base);
         }
+    } else {
+        pUtils->printPacket("发送方没有正确收到发送方的确认，数据校验错误", ackPkt);
     }
+    printWindow();
 }
 void GBNRdtSender::timeoutHandler(int seqNum) {
     // 重传之前重设计时器

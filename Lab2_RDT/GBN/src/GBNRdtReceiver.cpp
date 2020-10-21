@@ -18,7 +18,9 @@ void GBNRdtReceiver::receive(const Packet& packet) {
     int checksum = pUtils->calculateCheckSum(packet);
     // 校验和正确，收到的报文序号与期待的报文序号一致
     if (checksum == packet.checksum && expectSeqNumRecv == packet.seqnum) {
+        std::cout << std::endl;
         pUtils->printPacket("接收方正确收到发送方的报文", packet);
+        std::cout << std::endl;
 
         Message msg;
         memcpy(msg.data, packet.payload, sizeof(packet.payload));

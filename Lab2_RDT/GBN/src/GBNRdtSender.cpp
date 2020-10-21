@@ -13,12 +13,22 @@ bool GBNRdtSender::getWaitingState() {
 
 void GBNRdtSender::printWindow() {
     std::cout << std::endl
+              << "发送方：" << std::endl
               << "窗口大小：" << window.size() << std::endl
               << "base = " << base << std::endl
               << "nextSeqNum = " << nextSeqNum << std::endl
-              << "窗口内容：" << std::endl;
+              << "窗口内容：";
+    if (window.empty())
+        std::cout << "空" << std::endl;
+    else
+        std::cout << "[";
     for (auto& i : window) {
-        pUtils->printPacket("报文内容", i);
+        std::cout << i.seqnum;
+        if (i == window.back()) {
+            std::cout << "]" << std::endl;
+        } else {
+            std::cout << ", ";
+        }
     }
     std::cout << std::endl;
 }

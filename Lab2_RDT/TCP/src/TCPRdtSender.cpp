@@ -3,7 +3,7 @@
 #include "Global.h"
 
 TCPRdtSender::TCPRdtSender()
-    : base(0), nextSeqNum(0), laskAckNum(-1), dupCnt(0) {}
+    : base(0), nextSeqNum(0), dupCnt(0), lastAckNum(-1) {}
 
 TCPRdtSender::~TCPRdtSender() {}
 
@@ -14,12 +14,22 @@ bool TCPRdtSender::getWaitingState() {
 
 void TCPRdtSender::printWindow() {
     std::cout << std::endl
+              << "发送方：" << std::endl
               << "窗口大小：" << window.size() << std::endl
               << "base = " << base << std::endl
               << "nextSeqNum = " << nextSeqNum << std::endl
-              << "窗口内容：" << std::endl;
+              << "窗口内容：";
+    if (window.empty())
+        std::cout << "空" << std::endl;
+    else
+        std::cout << "[";
     for (auto& i : window) {
-        pUtils->printPacket("报文内容", i);
+        std::cout << i.seqnum;
+        if (i == window.back()) {
+            std::cout << "]" << std::endl;
+        } else {
+            std::cout << ", ";
+        }
     }
     std::cout << std::endl;
 }
@@ -50,9 +60,9 @@ bool TCPRdtSender::send(const Message& msg) {
 // 判断seqNum是否在窗口中
 bool TCPRdtSender::inWindow(int seqNum) {
     if (base <= nextSeqNum) {  // [base, nextSeqNum)
-        return seqNum >= base && seqNum < nextSeqNum;
+        return seqNum > base && seqNum <= nextSeqNum;
     } else {  // [0, nextSeqNum) || [base, WINDOW_SIZE_MAX)
-        return seqNum >= base || seqNum < nextSeqNum;
+        return seqNum > base || seqNum <= nextSeqNum;
     }
 }
 
@@ -63,24 +73,22 @@ void TCPRdtSender::receive(const Packet& ackPkt) {
 
         if (inWindow(ackPkt.acknum)) {  // 是窗口中的ack
             pUtils->printPacket("发送方正确收到确认", ackPkt);
-            base = (ackPkt.acknum + 1) % TCP_N;  // base和窗口左侧区间向前进
-            while (!window.empty() && window.front().seqnum != ackPkt.acknum) {
+            base = ackPkt.acknum;  // base和窗口左侧区间向前进
+            while (!window.empty() && window.front().seqnum != base) {
                 window.pop_front();
             }
-            if (window.front().seqnum == ackPkt.acknum)
-                window.pop_front();
         } else {
             pUtils->printPacket("发送方收到确认，但不是发送方期待的确认", ackPkt);
         }
 
-        if (ackPkt.acknum == laskAckNum) {
+        if (ackPkt.acknum == lastAckNum) {
             dupCnt++;
         } else {
             dupCnt = 0;
         }
-        laskAckNum = ackPkt.acknum;
+        lastAckNum = ackPkt.acknum;
 
-        if (dupCnt == 4) {
+        if (dupCnt >= 4) {
             std::cout << std::endl;
             pUtils->printPacket("发送方收到冗余Ack，进入快速重传", window.front());
             pns->sendToNetworkLayer(RECEIVER, window.front());

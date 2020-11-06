@@ -1,0 +1,100 @@
+!
+version 12.2
+no service timestamps log datetime msec
+no service timestamps debug datetime msec
+no service password-encryption
+!
+hostname Router
+!
+!
+!
+!
+!
+ip dhcp pool libraryWiFi
+ network 211.69.7.0 255.255.255.128
+ default-router 211.69.7.101
+ dns-server 0.0.0.0
+!
+!
+!
+no ip cef
+no ipv6 cef
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+interface GigabitEthernet0/0
+ ip address 211.69.7.101 255.255.255.128
+ duplex auto
+ speed auto
+!
+interface GigabitEthernet1/0
+ ip address 211.69.7.253 255.255.255.252
+ ip access-group 101 in
+ duplex auto
+ speed auto
+!
+interface GigabitEthernet2/0
+ ip address 211.69.7.250 255.255.255.128
+ ip access-group 102 in
+ duplex auto
+ speed auto
+!
+interface GigabitEthernet3/0
+ no ip address
+ duplex auto
+ speed auto
+!
+interface GigabitEthernet4/0
+ no ip address
+ duplex auto
+ speed auto
+!
+router rip
+ network 211.69.7.0
+ no auto-summary
+!
+ip classless
+!
+ip flow-export version 9
+!
+!
+access-list 101 deny ip 211.69.4.0 0.0.0.255 211.69.7.128 0.0.0.127
+access-list 101 deny ip 211.69.5.0 0.0.0.255 211.69.7.128 0.0.0.127
+access-list 101 deny ip 211.69.6.0 0.0.0.255 211.69.7.128 0.0.0.127
+access-list 101 permit ip any any
+access-list 102 deny ip 211.69.7.128 0.0.0.127 211.69.4.0 0.0.0.255
+access-list 102 deny ip 211.69.7.128 0.0.0.127 211.69.5.0 0.0.0.255
+access-list 102 deny ip 211.69.7.128 0.0.0.127 211.69.6.0 0.0.0.255
+access-list 102 permit ip any any
+!
+!
+!
+!
+!
+!
+line con 0
+!
+line aux 0
+!
+line vty 0 4
+ login
+!
+!
+!
+end
+
